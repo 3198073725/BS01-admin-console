@@ -3,14 +3,22 @@ import Login from '../views/Login.vue'
 import Users from '../views/Users.vue'
 import Videos from '../views/Videos.vue'
 import Comments from '../views/Comments.vue'
+import AuditLogs from '../views/AuditLogs.vue'
+import Categories from '../views/Categories.vue'
+import Tags from '../views/Tags.vue'
+import Analytics from '../views/Analytics.vue'
 import { adminApi } from '../lib/admin'
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
-  { path: '/', redirect: '/users' },
+  { path: '/', redirect: '/analytics' },
   { path: '/users', name: 'users', component: Users, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/videos', name: 'videos', component: Videos, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/comments', name: 'comments', component: Comments, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/audit', name: 'audit', component: AuditLogs, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/categories', name: 'categories', component: Categories, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/tags', name: 'tags', component: Tags, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/analytics', name: 'analytics', component: Analytics, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 
 const router = createRouter({
@@ -24,6 +32,16 @@ let isAdminCache = false
 router.beforeEach(async (to, from, next) => {
   const { getTokens } = await import('../lib/http')
   const hasToken = !!getTokens().access
+  // 当进入登录页或未携带 token 时，重置 admin 校验缓存
+  if (!hasToken || to.name === 'login') { adminChecked = false; isAdminCache = false }
+
+  // 若已登录管理员，访问登录页则直接进入主页面
+  if (to.name === 'login' && hasToken) {
+    try {
+      const ok = await adminApi.isAdmin()
+      if (ok) return next({ name: 'analytics' })
+    } catch (e) { void e }
+  }
   if (to.meta.requiresAuth && !hasToken) {
     return next({ name: 'login', query: { redirect: to.fullPath } })
   }

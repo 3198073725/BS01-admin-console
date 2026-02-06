@@ -85,3 +85,5 @@ async function request(path, { method = 'GET', headers = {}, body, query } = {})
 }
 
 export const http = { request, getTokens, setTokens, clearTokens, API_BASE };
+// 同时导出具名方法，便于按需动态导入（router.beforeEach 中使用）
+export { getTokens, setTokens, clearTokens, request, API_BASE };

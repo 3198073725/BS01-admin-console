@@ -11,11 +11,14 @@ export const adminApi = {
   me() {
     return http.request('/api/users/me/');
   },
+  adminMe() {
+    return http.request('/api/admin/me/');
+  },
   // Admin probe: small request to verify IsAdminUser
   async isAdmin() {
     try {
-      await http.request('/api/admin/users/', { query: { page_size: 1 } });
-      return true;
+      const me = await http.request('/api/admin/me/');
+      return !!(me && (me.is_staff || me.is_superuser));
     } catch (e) {
       if (e && e.status === 403) return false;
       throw e;
@@ -28,9 +31,24 @@ export const adminApi = {
   patchUser(id, payload) {
     return http.request(`/api/admin/users/${id}/`, { method: 'PATCH', body: payload });
   },
+  forceLogoutUser(id) {
+    return http.request(`/api/admin/users/${id}/force-logout/`, { method: 'POST' });
+  },
   // Videos
   listVideos(params) {
     return http.request('/api/admin/videos/', { query: params || {} });
+  },
+  batchApproveVideos(ids, action = 'approve', reason = '') {
+    return http.request('/api/admin/videos/batch-approve/', { method: 'POST', body: { video_ids: ids, action, reason } });
+  },
+  listTranscodeFailures(params) {
+    return http.request('/api/admin/videos/transcode-failures/', { query: params || {} });
+  },
+  videosMetricsTrend(params) {
+    return http.request('/api/admin/videos/metrics-trend/', { query: params || {} });
+  },
+  retryTranscode(id) {
+    return http.request(`/api/videos/${id}/retry-transcode/`, { method: 'POST' });
   },
   getVideo(id) {
     return http.request(`/api/admin/videos/${id}/`);
@@ -41,12 +59,57 @@ export const adminApi = {
   deleteVideo(id) {
     return http.request(`/api/admin/videos/${id}/`, { method: 'DELETE' });
   },
+  bulkUpdateVideos(ids, payload) {
+    return http.request('/api/admin/videos/bulk-update/', { method: 'POST', body: { video_ids: ids, ...(payload || {}) } });
+  },
+  bulkDeleteVideos(ids) {
+    return http.request('/api/admin/videos/bulk-delete/', { method: 'POST', body: { video_ids: ids } });
+  },
   // Comments
   listComments(params) {
     return http.request('/api/admin/comments/', { query: params || {} });
   },
   deleteComment(id) {
-    // staff 可删除评论
-    return http.request(`/api/interactions/comments/${id}/`, { method: 'DELETE' });
+    return http.request(`/api/admin/comments/${id}/`, { method: 'DELETE' });
+  },
+  // Audit Logs
+  listAuditLogs(params) {
+    return http.request('/api/admin/audit-logs/', { query: params || {} });
+  },
+  // Categories
+  listCategories(params) {
+    return http.request('/api/admin/categories/', { query: params || {} });
+  },
+  createCategory(payload) {
+    return http.request('/api/admin/categories/', { method: 'POST', body: payload });
+  },
+  updateCategory(id, payload) {
+    return http.request(`/api/admin/categories/${id}/`, { method: 'PATCH', body: payload });
+  },
+  deleteCategory(id) {
+    return http.request(`/api/admin/categories/${id}/`, { method: 'DELETE' });
+  },
+  // Tags
+  listTags(params) {
+    return http.request('/api/admin/tags/', { query: params || {} });
+  },
+  createTag(payload) {
+    return http.request('/api/admin/tags/', { method: 'POST', body: payload });
+  },
+  updateTag(id, payload) {
+    return http.request(`/api/admin/tags/${id}/`, { method: 'PATCH', body: payload });
+  },
+  deleteTag(id) {
+    return http.request(`/api/admin/tags/${id}/`, { method: 'DELETE' });
+  },
+  bulkDeleteTags(ids) {
+    return http.request('/api/admin/tags/bulk-delete/', { method: 'POST', body: { ids } });
+  },
+  mergeTags(payload) {
+    return http.request('/api/admin/tags/merge/', { method: 'POST', body: payload });
+  },
+  // Analytics
+  analyticsOverview(params) {
+    return http.request('/api/admin/analytics/overview/', { query: params || {} });
   },
 };

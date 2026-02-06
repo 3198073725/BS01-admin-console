@@ -48,10 +48,18 @@ export default {
           http.clearTokens()
           return
         }
-        const redirect = this.$route.query.redirect || '/users'
+        const redirect = this.$route.query.redirect || '/analytics'
         this.$router.replace(String(redirect))
       } catch (e) {
-        this.error = (e && e.data && e.data.detail) || e.message || '登录失败'
+        const st = Number(e && e.status || 0)
+        if (st === 401) {
+          this.error = '用户名或密码错误'
+        } else if (st === 429) {
+          const cd = (e && e.data && (e.data.cool_down_seconds || e.data.cooldown || e.data.cool_down))
+          this.error = cd ? `尝试过于频繁，请${cd}s后再试` : '尝试过于频繁，请稍后再试'
+        } else {
+          this.error = (e && e.data && e.data.detail) || e.message || '登录失败'
+        }
       } finally {
         this.loading = false
       }
