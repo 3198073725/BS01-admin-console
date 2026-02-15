@@ -446,7 +446,7 @@ export default {
         if (hostname.startsWith('admin.')) hostname = hostname.replace(/^admin\./, 'web.')
         else if (hostname.startsWith('api.')) hostname = hostname.replace(/^api\./, 'web.')
         // 本地环境统一用 8080 作为前台端口
-        const port = hostname.endsWith('bs01.local') ? '8080' : (loc.port || '')
+        const port = hostname.endsWith('vidsprout.local') || hostname.endsWith('bs01.local') ? '8080' : (loc.port || '')
         const hostPort = port ? `${hostname}:${port}` : hostname
         return `${protocol}//${hostPort}`
       } catch (e) { try { return window.location.origin } catch (_) { return '' } }

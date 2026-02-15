@@ -112,4 +112,18 @@ export const adminApi = {
   analyticsOverview(params) {
     return http.request('/api/admin/analytics/overview/', { query: params || {} });
   },
+
+  // System announcements
+  listAnnouncements(params) {
+    return http.request('/api/admin/announcements/', { query: params || {} });
+  },
+  createAnnouncement(payload) {
+    return http.request('/api/admin/announcements/', { method: 'POST', body: payload || {} });
+  },
+  patchAnnouncement(id, payload) {
+    return http.request(`/api/admin/announcements/${id}/`, { method: 'PATCH', body: payload || {} });
+  },
+  deleteAnnouncement(id) {
+    return http.request(`/api/admin/announcements/${id}/`, { method: 'DELETE' });
+  },
 };

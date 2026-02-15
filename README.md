@@ -1,24 +1,67 @@
-# admin-console
+# VidSprout Admin Console | 管理中枢
 
-## Project setup
-```
+VidSprout 管理后台是专为运营人员设计的可视化管理中枢，基于 Vue 3 深度定制。它不仅能够高效地管理全站内容，还集成了深度的视频审核流水线和多维度的运营数据监控。
+
+## ✨ 系统亮点
+
+- **响应式控制台**: 适配各类桌面分辨率，确保管理体验的一致性。
+- **深度审核流**: 视频管理页面支持直接唤起前台 Feed 播放器，实现“即看即审”。
+- **精细化权限**: 严格区分管理员权限，确保系统操作的安全性与可追溯性。
+- **动态通知系统**: 全站公告的一键发布与管理。
+
+## 📊 核心功能模块
+
+### 1. 运营看板 (Dashboard)
+- 实时统计全站用户增长、视频上传量及互动趋势。
+- 系统核心状态指标监控。
+
+### 2. 内容治理 (Content Governance)
+- **视频管理**: 列表展示所有投稿，支持按状态（待审核、已发布、已屏蔽）筛选。
+- **评论监控**: 智能识别与批量处理违规言论。
+- **分类/标签管理**: 灵活调整前台展示的分类结构。
+
+### 3. 用户管理 (User Operations)
+- 用户基本信息查询。
+- 账号锁定/解锁及权限等级变更。
+
+## 🛠 技术栈
+
+- **框架**: [Vue.js 3](https://v3.vuejs.org/) (Composition API)
+- **路由**: [Vue Router 4](https://router.vuejs.org/)
+- **网络**: Axios (支持全局请求拦截与身份校验)
+- **构建工具**: [Vue CLI 5](https://cli.vuejs.org/) (基于 Webpack)
+
+## 📦 开发与构建
+
+### 1. 基础环境
+- Node.js 16+
+- npm 或 yarn
+
+### 2. 快速启动
+```bash
+# 进入目录
+cd admin-console
+
+# 安装依赖
 npm install
-```
 
-### Compiles and hot-reloads for development
-```
+# 本地开发运行
 npm run serve
 ```
 
-### Compiles and minifies for production
-```
+### 3. 项目打包
+```bash
 npm run build
 ```
 
-### Lints and fixes files
-```
-npm run lint
-```
+## ⚙️ 重要配置说明
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- **反向代理**: 在 `vue.config.js` 中配置了跨域代理，确保与后端 API 的顺畅通信。
+- **域名跳转**: `Videos.vue` 中集成了智能域名解析逻辑，自动适配 `vidsprout.local` 本地环境与生产环境的端口映射（例如管理端跳转至前台的 8080 端口）。
+
+## 🎨 界面规范
+- 使用统一的后台管理色调，强调清晰度与操作效率。
+- 适配 VidSprout 品牌色（#fb7299）。
+
+---
+*VidSprout Admin - 赋能运营，掌控全局*

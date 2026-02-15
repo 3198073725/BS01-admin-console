@@ -7,6 +7,7 @@ import AuditLogs from '../views/AuditLogs.vue'
 import Categories from '../views/Categories.vue'
 import Tags from '../views/Tags.vue'
 import Analytics from '../views/Analytics.vue'
+import Announcements from '../views/Announcements.vue'
 import { adminApi } from '../lib/admin'
 
 const routes = [
@@ -19,6 +20,7 @@ const routes = [
   { path: '/categories', name: 'categories', component: Categories, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/tags', name: 'tags', component: Tags, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/analytics', name: 'analytics', component: Analytics, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/announcements', name: 'announcements', component: Announcements, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 
 const router = createRouter({

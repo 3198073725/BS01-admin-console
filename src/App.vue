@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header class="topbar" v-if="!isLogin">
-      <div class="brand">BS01 管理后台</div>
+      <div class="brand">VidSprout 管理后台</div>
       <div class="spacer"></div>
       <button class="btn" @click="onLogout">退出</button>
     </header>
@@ -11,6 +11,7 @@
         <router-link to="/users">用户</router-link>
         <router-link to="/videos">视频</router-link>
         <router-link to="/comments">评论</router-link>
+        <router-link to="/announcements">系统通知</router-link>
         <router-link to="/audit">审计</router-link>
         <router-link to="/categories">分类</router-link>
         <router-link to="/tags">标签</router-link>
