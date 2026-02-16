@@ -1,4 +1,3 @@
-const DEFAULT_API_PORT = 8000;
 let API_BASE = '';
 try {
   // 允许在 index.html 里通过 window.__API_BASE__ 直接指定
@@ -10,7 +9,10 @@ try {
     const host = typeof location !== 'undefined' ? (location.hostname || '127.0.0.1') : '127.0.0.1';
     // 将 admin.* / web.* / mobile.* 映射为 api.*
     const apiHost = host.replace(/^(admin|web|mobile)\./, 'api.');
-    API_BASE = `${proto}//${apiHost}:${DEFAULT_API_PORT}`;
+    const port = typeof location !== 'undefined' ? (location.port || '') : '';
+    const isDefaultPort = !port || port === '80';
+    const apiPort = isDefaultPort ? '' : ':8000';
+    API_BASE = `${proto}//${apiHost}${apiPort}`;
   }
 } catch (e) {
   API_BASE = 'http://127.0.0.1:8000';
