@@ -5,14 +5,12 @@ try {
   if (override && typeof override === 'string' && override.startsWith('http')) {
     API_BASE = override.replace(/\/$/, '');
   } else {
-    const proto = typeof location !== 'undefined' ? (location.protocol || 'http:') : 'http:';
-    const host = typeof location !== 'undefined' ? (location.hostname || '127.0.0.1') : '127.0.0.1';
-    // 将 admin.* / web.* / mobile.* 映射为 api.*
-    const apiHost = host.replace(/^(admin|web|mobile)\./, 'api.');
-    const port = typeof location !== 'undefined' ? (location.port || '') : '';
-    const isDefaultPort = !port || port === '80';
-    const apiPort = isDefaultPort ? '' : ':8000';
-    API_BASE = `${proto}//${apiHost}${apiPort}`;
+    // 默认使用同域（Nginx 将 /api/ 反代到后端），避免依赖 api 子域名解析，且可避免 CORS。
+    if (typeof location !== 'undefined' && location.origin) {
+      API_BASE = String(location.origin).replace(/\/$/, '');
+    } else {
+      API_BASE = 'http://127.0.0.1:8000';
+    }
   }
 } catch (e) {
   API_BASE = 'http://127.0.0.1:8000';
