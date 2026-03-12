@@ -1,15 +1,28 @@
 let API_BASE = '';
 try {
-  // 允许在 index.html 里通过 window.__API_BASE__ 直接指定
-  const override = typeof window !== 'undefined' && window.__API_BASE__;
-  if (override && typeof override === 'string' && override.startsWith('http')) {
-    API_BASE = override.replace(/\/$/, '');
+  // 允许通过 localStorage 的 api_base 快速切换（优先级最高）
+  const saved = typeof localStorage !== 'undefined' && localStorage.getItem('api_base');
+  if (saved && typeof saved === 'string' && saved.startsWith('http')) {
+    API_BASE = saved.replace(/\/$/, '');
   } else {
-    // 默认使用同域（Nginx 将 /api/ 反代到后端），避免依赖 api 子域名解析，且可避免 CORS。
-    if (typeof location !== 'undefined' && location.origin) {
-      API_BASE = String(location.origin).replace(/\/$/, '');
+    // 允许在 index.html 里通过 window.__API_BASE__ 直接指定
+    const override = typeof window !== 'undefined' && window.__API_BASE__;
+    if (override && typeof override === 'string' && override.startsWith('http')) {
+      API_BASE = override.replace(/\/$/, '');
     } else {
-      API_BASE = 'http://127.0.0.1:8000';
+      // 默认根据当前域名推导 API 基址（将 admin/web/mobile.* 映射为 api.*）。
+      if (typeof location !== 'undefined' && location.protocol && location.hostname) {
+        const proto = location.protocol || 'http:';
+        const host = location.hostname || '127.0.0.1';
+        const apiHost = host.replace(/^(admin|web|mobile)\./, 'api.');
+        const port = location.port || '';
+        const isDefaultPort = !port || port === '80' || port === '443';
+        // 若当前页面是 dev server 端口（如 8080/8082/5173），后端通常在 8000
+        const apiPort = isDefaultPort ? '' : ':8000';
+        API_BASE = `${proto}//${apiHost}${apiPort}`.replace(/\/$/, '');
+      } else {
+        API_BASE = 'http://127.0.0.1:8000';
+      }
     }
   }
 } catch (e) {

@@ -15,6 +15,7 @@
         <router-link to="/audit">审计</router-link>
         <router-link to="/categories">分类</router-link>
         <router-link to="/tags">标签</router-link>
+        <router-link to="/api-base">API 地址</router-link>
       </aside>
       <main class="container content">
         <router-view />
