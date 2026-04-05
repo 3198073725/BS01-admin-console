@@ -61,6 +61,7 @@ export default {
   data() {
     return {
       me: null,
+      meLoading: true,
       showSwitchModal: false,
       switchTargetUsername: '',
       switchTargetPassword: '',
@@ -79,7 +80,9 @@ export default {
     },
     canSwitchUser() {
       try {
-        return this.me && this.me.admin_role === 'super_admin'
+        const hasRole = this.me && this.me.admin_role === 'super_admin'
+        console.log('[App] canSwitchUser check:', { me: this.me, admin_role: this.me?.admin_role, hasRole })
+        return hasRole
       } catch (e) { return false }
     },
     showApiBase() {
@@ -100,10 +103,15 @@ export default {
   },
   methods: {
     async loadMe() {
+      this.meLoading = true
       try {
         this.me = await adminApi.adminMe()
+        console.log('[App] loadMe success:', this.me)
       } catch (e) {
+        console.error('[App] loadMe error:', e)
         this.me = null
+      } finally {
+        this.meLoading = false
       }
     },
     onLogout() {
