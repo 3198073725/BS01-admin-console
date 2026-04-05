@@ -51,7 +51,7 @@ export const adminApi = {
     return http.request('/api/admin/analytics/overview/', { query: params || {} });
   },
   retryTranscode(id) {
-    return http.request(`/api/videos/${id}/retry-transcode/`, { method: 'POST' });
+    return http.request(`/api/admin/videos/${id}/retry-transcode/`, { method: 'POST' });
   },
   getVideo(id) {
     return http.request(`/api/admin/videos/${id}/`);

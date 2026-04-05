@@ -179,6 +179,11 @@ export default {
         })
         this.values = { ...values }
         this.originalValues = { ...values }
+        
+        // 读取热门推荐配置
+        this.featuredVideoIds = values['featured_video_ids'] || ''
+        this.featuredLimit = values['featured_limit'] || 10
+        
         this.changed = false
       } catch (e) {
         console.error('Fetch config failed:', e)
@@ -192,6 +197,10 @@ export default {
     },
     async saveConfig() {
       if (!confirm('确定要保存所有修改吗？')) return
+      
+      // 将热门推荐设置合并到 values 中
+      this.values['featured_video_ids'] = this.featuredVideoIds
+      this.values['featured_limit'] = this.featuredLimit
       
       this.loading = true
       try {
