@@ -33,37 +33,17 @@
     <!-- Switch User Modal -->
     <div v-if="showSwitchModal" class="modal-mask" @click.self="showSwitchModal = false">
       <div class="modal">
-        <!-- Step 1: Admin Auth -->
-        <div v-if="switchStep === 'auth'">
-          <h3>切换用户 - 验证管理员身份</h3>
-          <p class="hint">请输入您的管理员凭据</p>
-          <div class="form">
-            <label>管理员用户名</label>
-            <input v-model="switchAdminUsername" placeholder="请输入管理员用户名" />
-            <label>管理员密码</label>
-            <input v-model="switchAdminPassword" type="password" placeholder="请输入管理员密码" />
-            <button class="btn primary" :disabled="switchLoading" @click="confirmSwitchAuth">
-              {{ switchLoading ? '验证中...' : '下一步' }}
-            </button>
-            <button class="btn secondary" @click="showSwitchModal = false">取消</button>
-          </div>
-        </div>
-        
-        <!-- Step 2: Select User -->
-        <div v-else-if="switchStep === 'select'">
-          <h3>选择要切换到的用户</h3>
-          <p class="hint">共 {{ switchUsers.length }} 个用户可切换</p>
-          <div class="user-list">
-            <div v-for="u in switchUsers" :key="u.id" class="user-item" @click="doSwitchUser(u.id)">
-              <span class="username">{{ u.username }}</span>
-              <span v-if="u.nickname" class="nickname">({{ u.nickname }})</span>
-              <span v-if="u.is_staff" class="badge">管理员</span>
-            </div>
-          </div>
-          <div class="form" style="margin-top: 12px;">
-            <button class="btn secondary" @click="switchStep = 'auth'">返回</button>
-            <button class="btn secondary" @click="showSwitchModal = false">取消</button>
-          </div>
+        <h3>切换管理员账号</h3>
+        <p class="hint">请输入要登录的管理员账号和密码</p>
+        <div class="form">
+          <label>管理员用户名</label>
+          <input ref="switchUsernameInput" v-model="switchTargetUsername" placeholder="请输入管理员用户名" />
+          <label>管理员密码</label>
+          <input ref="switchPasswordInput" v-model="switchTargetPassword" type="password" placeholder="请输入管理员密码" />
+          <button class="btn primary" :disabled="switchLoading" @click="doSwitchUser">
+            {{ switchLoading ? '登录中...' : '切换登录' }}
+          </button>
+          <button class="btn secondary" @click="showSwitchModal = false">取消</button>
         </div>
         <p v-if="switchError" class="err">{{ switchError }}</p>
       </div>
@@ -82,10 +62,8 @@ export default {
     return {
       me: null,
       showSwitchModal: false,
-      switchStep: 'auth', // 'auth' | 'select'
-      switchAdminUsername: '',
-      switchAdminPassword: '',
-      switchUsers: [],
+      switchTargetUsername: '',
+      switchTargetPassword: '',
       switchLoading: false,
       switchError: '',
     }
@@ -135,35 +113,20 @@ export default {
       this.$router.replace({ name: 'login' })
     },
     openSwitchUser() {
-      this.switchStep = 'auth'
-      this.switchAdminUsername = ''
-      this.switchAdminPassword = ''
-      this.switchUsers = []
+      this.switchTargetUsername = ''
+      this.switchTargetPassword = ''
       this.switchError = ''
       this.showSwitchModal = true
     },
-    async confirmSwitchAuth() {
-      if (!this.switchAdminUsername || !this.switchAdminPassword) {
+    async doSwitchUser() {
+      // 优先使用 ref 获取值（兼容浏览器自动填充）
+      const username = this.$refs.switchUsernameInput?.value || this.switchTargetUsername
+      const password = this.$refs.switchPasswordInput?.value || this.switchTargetPassword
+      
+      if (!username || !password) {
         this.switchError = '请输入管理员用户名和密码'
         return
       }
-      this.switchLoading = true
-      this.switchError = ''
-      try {
-        // 验证管理员凭据并获取可切换用户列表
-        const res = await adminApi.switchUser({
-          admin_username: this.switchAdminUsername,
-          admin_password: this.switchAdminPassword
-        })
-        this.switchUsers = res.users || []
-        this.switchStep = 'select'
-      } catch (e) {
-        this.switchError = (e && e.data && e.data.detail) || e.message || '验证失败'
-      } finally {
-        this.switchLoading = false
-      }
-    },
-    async doSwitchUser(userId) {
       this.switchLoading = true
       this.switchError = ''
       try {
@@ -171,11 +134,10 @@ export default {
         const currentToken = http.getTokens()
         localStorage.setItem('admin:original_token', JSON.stringify(currentToken))
         
-        // 执行切换
+        // 执行切换登录
         const res = await adminApi.switchUser({
-          admin_username: this.switchAdminUsername,
-          admin_password: this.switchAdminPassword,
-          target_user_id: userId
+          target_username: username,
+          target_password: password
         })
         
         // 设置新token
@@ -183,7 +145,7 @@ export default {
         localStorage.setItem('admin:switched', '1')
         
         this.showSwitchModal = false
-        alert(`已切换到用户: ${res.user.username}`)
+        alert(`已切换到管理员: ${res.user.username}`)
         window.location.reload()
       } catch (e) {
         this.switchError = (e && e.data && e.data.detail) || e.message || '切换失败'

@@ -140,14 +140,13 @@ export const adminApi = {
   handleReport(id, action, notes) {
     return http.request(`/api/admin/reports/${id}/handle/`, { method: 'POST', body: { action, notes } });
   },
-  // Switch User
-  switchUser({ admin_username, admin_password, target_user_id }) {
+  // Switch User - 直接登录到目标管理员账号
+  switchUser({ target_username, target_password }) {
     return http.request('/api/admin/switch-user/', { 
       method: 'POST', 
       body: { 
-        admin_username, 
-        admin_password, 
-        target_user_id 
+        target_username, 
+        target_password 
       } 
     });
   },
