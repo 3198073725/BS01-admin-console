@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page">
     <div class="tabs">
       <button class="tab" :class="{active: tab==='review'}" @click="switchTab('review')">待审核媒体</button>
       <button class="tab" :class="{active: tab==='logs'}" @click="switchTab('logs')">操作日志</button>

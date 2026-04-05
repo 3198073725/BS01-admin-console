@@ -47,6 +47,9 @@ export const adminApi = {
   videosMetricsTrend(params) {
     return http.request('/api/admin/videos/metrics-trend/', { query: params || {} });
   },
+  analyticsOverview(params) {
+    return http.request('/api/admin/analytics/overview/', { query: params || {} });
+  },
   retryTranscode(id) {
     return http.request(`/api/videos/${id}/retry-transcode/`, { method: 'POST' });
   },
@@ -108,12 +111,13 @@ export const adminApi = {
   mergeTags(payload) {
     return http.request('/api/admin/tags/merge/', { method: 'POST', body: payload });
   },
-  // Analytics
-  analyticsOverview(params) {
-    return http.request('/api/admin/analytics/overview/', { query: params || {} });
+  // System Settings
+  getSystemSettings() {
+    return http.request('/api/configs/admin/list/');
   },
-
-  // System announcements
+  updateSystemSettings(payload) {
+    return http.request('/api/configs/admin/update/', { method: 'POST', body: payload });
+  },
   listAnnouncements(params) {
     return http.request('/api/admin/announcements/', { query: params || {} });
   },
@@ -125,5 +129,26 @@ export const adminApi = {
   },
   deleteAnnouncement(id) {
     return http.request(`/api/admin/announcements/${id}/`, { method: 'DELETE' });
+  },
+  // Reports
+  listReports(params) {
+    return http.request('/api/admin/reports/', { query: params || {} });
+  },
+  getReport(id) {
+    return http.request(`/api/admin/reports/${id}/`);
+  },
+  handleReport(id, action, notes) {
+    return http.request(`/api/admin/reports/${id}/handle/`, { method: 'POST', body: { action, notes } });
+  },
+  // Switch User
+  switchUser({ admin_username, admin_password, target_user_id }) {
+    return http.request('/api/admin/switch-user/', { 
+      method: 'POST', 
+      body: { 
+        admin_username, 
+        admin_password, 
+        target_user_id 
+      } 
+    });
   },
 };

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page">
     <div class="toolbar">
       <h2 style="margin:0; font-size:18px; font-weight:700; color:#111827;">主页面</h2>
       <div style="flex:1"></div>
@@ -14,7 +14,7 @@
       <button @click="exportCSV" :disabled="loading || !hasTrend">导出CSV</button>
     </div>
 
-    <div class="grid">
+    <div class="analytics-grid">
       <div class="card">
         <div class="card-title">关键指标</div>
         <div class="kpis">
@@ -108,12 +108,12 @@
             <button v-if="zoomFromIdx>=0" @click="resetZoom">重置缩放</button>
           </div>
           <div class="tip">
-            <template v-if="hoverIndex>=0">
-              <span class="date">{{ shortDateFull(trend[hoverIndex] && trend[hoverIndex].date) }}</span>
-              <span v-if="seriesOn.users" class="chip g">用户 {{ fmt(trend[hoverIndex].users) }}</span>
-              <span v-if="seriesOn.videos" class="chip b">视频 {{ fmt(trend[hoverIndex].videos) }}</span>
-              <span v-if="seriesOn.comments" class="chip a">评论 {{ fmt(trend[hoverIndex].comments) }}</span>
-              <span v-if="seriesOn.views" class="chip r">播放 {{ fmt(trend[hoverIndex].views) }}</span>
+            <template v-if="hoverIndex>=0 && hoverIndex < trend.length">
+              <span class="date">{{ shortDateFull(trend[hoverIndex]?.date) }}</span>
+              <span v-if="seriesOn.users && trend[hoverIndex]?.users" class="chip g">用户 {{ fmt(trend[hoverIndex].users) }}</span>
+              <span v-if="seriesOn.videos && trend[hoverIndex]?.videos" class="chip b">视频 {{ fmt(trend[hoverIndex].videos) }}</span>
+              <span v-if="seriesOn.comments && trend[hoverIndex]?.comments" class="chip a">评论 {{ fmt(trend[hoverIndex].comments) }}</span>
+              <span v-if="seriesOn.views && trend[hoverIndex]?.views" class="chip r">播放 {{ fmt(trend[hoverIndex].views) }}</span>
             </template>
           </div>
         </div>
@@ -122,21 +122,23 @@
 
       <div class="card">
         <div class="card-title">日新增堆叠柱（近14日）</div>
-        <div v-if="stackBars.length" class="stack-wrap">
-          <div
-            v-for="(b,i) in stackBars"
-            :key="b.date || i"
-            class="stack-bar"
-            :title="stackTitle(b)"
-          >
-            <span class="seg user" :style="{ height: b.hUsers }"></span>
-            <span class="seg video" :style="{ height: b.hVideos }"></span>
-            <span class="seg comment" :style="{ height: b.hComments }"></span>
-            <span class="seg view" :style="{ height: b.hViews }"></span>
+        <div v-if="stackBars.length" class="stack-chart">
+          <div class="stack-bars">
+            <div
+              v-for="(b,i) in stackBars"
+              :key="b.date || i"
+              class="stack-bar"
+              :title="stackTitle(b)"
+            >
+              <span class="seg user" :style="{ height: b.hUsers }"></span>
+              <span class="seg video" :style="{ height: b.hVideos }"></span>
+              <span class="seg comment" :style="{ height: b.hComments }"></span>
+              <span class="seg view" :style="{ height: b.hViews }"></span>
+            </div>
           </div>
-          <div class="stack-axis">
-            <span v-for="(b,i) in stackBars" :key="'x'+i">
-              <small v-if="i===0 || i===stackBars.length-1 || i===midIdx" class="axis-txt">{{ shortDate(b.date) }}</small>
+          <div class="stack-xaxis">
+            <span v-for="(b,i) in stackBars" :key="'x'+i" class="x-tick" :class="{show: i===0 || i===stackBars.length-1 || i===midIdx}">
+              <small>{{ shortDate(b.date) }}</small>
             </span>
           </div>
           <div class="stack-legend">
@@ -602,8 +604,13 @@ export default {
     },
     sparkHeight(v){
       const max = Math.max(1, this.viewBarsMax)
-      const pct = Math.max(0, Math.min(1, Number(v||0)/max))
-      return Math.round(pct*100) + '%'
+      const val = Number(v||0)
+      // 如果有数据，至少显示20%高度，确保可见
+      if (val > 0) {
+        const pct = Math.max(0.2, Math.min(1, val/max))
+        return Math.round(pct*100) + '%'
+      }
+      return '0%'
     },
     sparkTitle(i, v){
       const item = (this.trend || [])[i]
@@ -697,13 +704,21 @@ export default {
     },
     stackBars(){
       const arr = Array.isArray(this.trend) ? this.trend.slice(-14) : []
-      const max = Math.max(1, ...arr.map(it => Number(it.users||0)+Number(it.videos||0)+Number(it.comments||0)+Number(it.views||0)))
+      if (!arr.length) return []
+      const maxTotal = Math.max(...arr.map(it => Number(it.users||0)+Number(it.videos||0)+Number(it.comments||0)+Number(it.views||0)))
+      if (maxTotal === 0) return []
+      const max = Math.max(1, maxTotal)
       return arr.map(it => {
         const users = Number(it.users||0)
         const videos = Number(it.videos||0)
         const comments = Number(it.comments||0)
         const views = Number(it.views||0)
-        const scale = v => Math.round(Math.max(0, Math.min(1, v / max)) * 100) + '%'
+        // 设置最小20%高度确保可见，但保持比例
+        const scale = v => {
+          if (v <= 0) return '0%'
+          const pct = Math.max(0.2, v / max)
+          return Math.round(pct * 100) + '%'
+        }
         return {
           date: it.date,
           users, videos, comments, views,
@@ -722,7 +737,8 @@ export default {
 </script>
 
 <style scoped>
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.page { width: 100%; }
+.analytics-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
 .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:14px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
 .card-title { font-weight:700; color:#111827; margin-bottom:8px; }
 .kpis { display:flex; gap:14px; flex-wrap:wrap; }
@@ -771,7 +787,19 @@ export default {
 .bar { background:#f3f4f6; border-radius:999px; height:10px; overflow:hidden; }
 .bar-fill { height:100%; background:#60a5fa; border-radius:999px; }
 .bar-val { font-variant-numeric: tabular-nums; color:#6b7280; }
-.empty { color:#9ca3af; font-size: 13px; }
+.empty { 
+  color: #9ca3af; 
+  font-size: 14px; 
+  text-align: center; 
+  padding: 40px 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #e5e7eb;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .err { color:#dc2626; }
 /* ranks */
 .rank-list { list-style:none; margin:0; padding:0; }
@@ -779,19 +807,21 @@ export default {
 .rank-list .idx { width:20px; text-align:center; color:#6b7280; }
 .rank-list .name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#374151; }
 .rank-list .metric { color:#6b7280; font-variant-numeric: tabular-nums; }
-.stack-wrap { display:flex; gap:6px; align-items:flex-end; padding:4px 0 8px; }
-.stack-bar { width:18px; display:flex; flex-direction:column; justify-content:flex-end; gap:2px; }
+.stack-chart { display:flex; flex-direction:column; gap:12px; }
+.stack-bars { display:flex; gap:8px; align-items:flex-end; justify-content:center; min-height:120px; padding:20px 8px 0; }
+.stack-bar { width:24px; display:flex; flex-direction:column; justify-content:flex-end; gap:3px; }
 .stack-bar .seg { display:block; width:100%; border-radius:4px; }
 .stack-bar .seg.user { background:#34d399; }
 .stack-bar .seg.video { background:#60a5fa; }
 .stack-bar .seg.comment { background:#f59e0b; }
 .stack-bar .seg.view { background:#ef4444; }
-.stack-axis { display:flex; gap:6px; justify-content:space-between; width:100%; margin-top:4px; color:#9ca3af; font-size:11px; }
-.stack-axis .axis-txt { display:block; text-align:center; width:18px; }
-.stack-legend { display:flex; gap:12px; margin-top:6px; color:#6b7280; font-size:12px; flex-wrap:wrap; }
-.spark-wrap { display:flex; flex-direction:column; gap:8px; }
-.bar-spark { display:flex; gap:4px; align-items:flex-end; height:80px; }
-.bar-spark-item { width:10px; background:linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%); border-radius:3px 3px 0 0; }
-.spark-legend { display:flex; gap:12px; color:#6b7280; font-size:12px; }
-@media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+.stack-xaxis { display:flex; gap:8px; justify-content:center; padding:0 8px; margin-top:8px; }
+.stack-xaxis .x-tick { width:24px; text-align:center; color:#9ca3af; font-size:11px; visibility:hidden; }
+.stack-xaxis .x-tick.show { visibility:visible; }
+.stack-legend { display:flex; gap:16px; justify-content:center; color:#6b7280; font-size:12px; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:1px solid #e5e7eb; }
+.spark-wrap { display:flex; flex-direction:column; gap:12px; }
+.bar-spark { display:flex; gap:6px; align-items:flex-end; justify-content:center; height:100px; min-height:80px; padding:0 8px; }
+.bar-spark-item { width:12px; background:linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%); border-radius:4px 4px 0 0; }
+.spark-legend { display:flex; gap:16px; justify-content:center; color:#6b7280; font-size:12px; margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb; }
+@media (max-width: 900px){ .analytics-grid{ grid-template-columns: 1fr; } }
 </style>

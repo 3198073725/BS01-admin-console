@@ -3,11 +3,13 @@ import Login from '../views/Login.vue'
 import Users from '../views/Users.vue'
 import Videos from '../views/Videos.vue'
 import Comments from '../views/Comments.vue'
+import Reports from '../views/Reports.vue'
 import AuditLogs from '../views/AuditLogs.vue'
 import Categories from '../views/Categories.vue'
 import Tags from '../views/Tags.vue'
 import Analytics from '../views/Analytics.vue'
 import Announcements from '../views/Announcements.vue'
+import System from '../views/System.vue'
 import ApiBase from '../views/ApiBase.vue'
 import { adminApi } from '../lib/admin'
 
@@ -17,11 +19,13 @@ const routes = [
   { path: '/users', name: 'users', component: Users, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/videos', name: 'videos', component: Videos, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/comments', name: 'comments', component: Comments, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/reports', name: 'reports', component: Reports, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/audit', name: 'audit', component: AuditLogs, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/categories', name: 'categories', component: Categories, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/tags', name: 'tags', component: Tags, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/analytics', name: 'analytics', component: Analytics, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/announcements', name: 'announcements', component: Announcements, meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/system', name: 'system', component: System, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/api-base', name: 'api-base', component: ApiBase, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 
@@ -36,6 +40,18 @@ let isAdminCache = false
 router.beforeEach(async (to, from, next) => {
   const { getTokens } = await import('../lib/http')
   const hasToken = !!getTokens().access
+  // Feature flag: hide API base settings in admin console.
+  // When disabled, also block direct navigation to /api-base.
+  try {
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('admin:show_api_base') : null
+    const v = (saved !== null && saved !== undefined && String(saved).length)
+      ? String(saved)
+      : ((process && process.env && process.env.VUE_APP_SHOW_API_BASE) ? String(process.env.VUE_APP_SHOW_API_BASE) : 'true')
+    const enabled = !['0', 'false', 'no', 'off'].includes(String(v).trim().toLowerCase())
+    if (!enabled && (to.name === 'api-base' || to.path === '/api-base')) {
+      return next({ name: 'analytics' })
+    }
+  } catch (e) { void e }
   // 当进入登录页或未携带 token 时，重置 admin 校验缓存
   if (!hasToken || to.name === 'login') { adminChecked = false; isAdminCache = false }
 

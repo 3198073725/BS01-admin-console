@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page">
     <div class="toolbar">
       <input v-model.trim="q" placeholder="搜索 评论内容" @keyup.enter="fetchList(1)" />
       <input v-model.trim="video_id" placeholder="视频ID (可选)" @keyup.enter="fetchList(1)" style="width: 240px;" />
@@ -112,7 +112,19 @@ export default {
     maxPage() { return Math.max(1, Math.ceil(this.total / this.page_size)) }
   },
   created() { this.fetchList(1) },
+  mounted() {
+    document.addEventListener('click', this.handleGlobalClick)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleGlobalClick)
+  },
   methods: {
+    handleGlobalClick(e) {
+      const dropdown = this.$refs['dd_' + this.actionOpenId]
+      if (dropdown && !dropdown[0]?.contains(e.target)) {
+        this.actionOpenId = ''
+      }
+    },
     fmtTime,
     toggleActions(c){
       this.actionOpenId = (this.actionOpenId===c.id ? '' : c.id)

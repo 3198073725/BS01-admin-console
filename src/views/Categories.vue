@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page">
     <div class="toolbar">
       <input v-model.trim="q" placeholder="搜索 分类名称" @keyup.enter="fetchList(1)" />
       <select v-model.number="page_size" @change="fetchList(1)">

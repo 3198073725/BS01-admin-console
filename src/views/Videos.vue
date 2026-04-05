@@ -1,7 +1,8 @@
 <template>
-  <div @click="actionOpenId=''">
-    <div class="toolbar">
-      <input v-model.trim="q" placeholder="搜索 标题/描述/作者用户名" @keyup.enter="fetchList(1)" />
+  <div class="page">
+    <div @click="actionOpenId=''" style="width: 100%;">
+      <div class="toolbar">
+        <input v-model.trim="q" placeholder="搜索 标题/描述/作者用户名" @keyup.enter="fetchList(1)" />
       <input v-model.trim="user_id" placeholder="用户ID (可选)" @keyup.enter="fetchList(1)" style="width: 260px;" />
       <select v-model="status" @change="fetchList(1)">
         <option value="">状态(全部)</option>
@@ -211,7 +212,7 @@
           <button class="close" @click="closeEditDialog">✕</button>
         </header>
         <div class="body">
-          <div class="grid">
+          <div class="edit-grid">
             <div class="field">
               <label>分类</label>
               <select v-model="editForm.category_id">
@@ -254,6 +255,7 @@
     </div>
 
     <p v-if="error" class="err">{{ error }}</p>
+    </div>
   </div>
 </template>
 
@@ -304,7 +306,19 @@ export default {
     }
   },
   created() { this.fetchList(1); this.loadCategories(); this.loadTags(); },
+  mounted() {
+    document.addEventListener('click', this.handleGlobalClick)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleGlobalClick)
+  },
   methods: {
+    handleGlobalClick(e) {
+      const dropdown = this.$refs['dd_' + this.actionOpenId]
+      if (dropdown && !dropdown[0]?.contains(e.target)) {
+        this.actionOpenId = ''
+      }
+    },
     toggleActions(v){
       this.actionOpenId = (this.actionOpenId===v.id ? '' : v.id)
       if (this.actionOpenId) {
@@ -680,6 +694,86 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    async fetchFailures(p) {
+      this.loading = true
+      this.error = ''
+      try {
+        const params = {
+          page: p,
+          page_size: this.page_size,
+          q: this.q || undefined,
+          user_id: this.user_id || undefined,
+          status: this.status || undefined,
+          visibility: this.visibility || undefined,
+          owner_verified: this.owner_verified || undefined,
+          order: this.order,
+        }
+        const r = await adminApi.listTranscodeFailures(params)
+        const arr = r.results || []
+        arr.forEach(v => {
+          v.category_id = (v.category && v.category.id) || ''
+          const tagNames = Array.isArray(v.tags) ? v.tags.map(t => t && t.name).filter(Boolean) : []
+          v._tagsText = tagNames.join(',')
+        })
+        this.rows = arr
+        this.page = Number(r.page || p)
+        this.page_size = Number(r.page_size || this.page_size)
+        this.total = Number(r.total || 0)
+        this.has_next = !!r.has_next
+        this.selected = []
+        this.bulk = { category_id: '', status: '', visibility: '', allow_comments: '', allow_download: '' }
+      } catch (e) {
+        this.error = (e && e.data && e.data.detail) || e.message || '加载失败'
+        if (e && (e.status === 401 || e.status === 403)) this.$router.replace({ name: 'login' })
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async batchApprove(action = 'approve') {
+      if (!this.selected.length) return
+      if (action !== 'approve' && action !== 'reject') {
+        this.error = '未知操作'
+        return
+      }
+
+      if (action === 'approve' && this.selectedUnverifiedCount > 0) {
+        const ok = confirm(`所选中有 ${this.selectedUnverifiedCount} 个作者未认证，通过/发布可能失败，是否继续？`)
+        if (!ok) return
+      }
+
+      const reason = action === 'reject' ? (prompt('拒绝原因（可选）', '') || '') : ''
+      this.loading = true
+      this.error = ''
+      try {
+        await adminApi.batchApproveVideos(this.selected, action, reason)
+        await this.fetchList(this.page)
+      } catch (e) {
+        const d = (e && e.data) || {}
+        this.error = d.detail || d.status || e.message || '批量审核失败'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async onRetryTranscode(v) {
+      if (!v || !v.id || this.loading) return
+      const ok = confirm('确认重试该视频转码？')
+      if (!ok) return
+      this.loading = true
+      this.error = ''
+      try {
+        await adminApi.retryTranscode(v.id)
+        await this.fetchList(this.page)
+      } catch (e) {
+        const d = (e && e.data) || {}
+        this.error = d.detail || d.status || e.message || '重试转码失败'
+      } finally {
+        this.loading = false
+      }
+      this.actionOpenId = ''
     }
   }
 }
@@ -746,14 +840,14 @@ export default {
 .modal-header { display:flex; align-items:center; justify-content:space-between; padding: 12px 14px; border-bottom:1px solid #e5e7eb; }
 .modal-header .close { background:transparent; border:none; font-size:18px; color:#6b7280; cursor:pointer; }
 .body { padding: 12px 14px; }
-.grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px 14px; }
+.edit-grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px 14px; }
 .field { display:flex; flex-direction:column; gap:6px; }
 .field-wide { grid-column: 1 / -1; }
 .field label { font-size:12px; color:#6b7280; }
 .field input, .field select { padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; outline:none; }
 .foot { display:flex; justify-content:flex-end; gap:10px; padding: 0 14px 14px; border-top:1px solid #e5e7eb; }
-.btn { padding:8px 12px; border-radius:10px; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; }
-.btn.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+.edit-btn { padding:8px 12px; border-radius:10px; border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; }
+.edit-btn.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
 .pagination { display:flex; justify-content:center; align-items:center; gap:10px; padding: 12px 0; }
 .warn { color: #b45309; font-size: 12px; }
 </style>

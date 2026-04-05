@@ -2,33 +2,33 @@
   <div class="page">
     <div class="toolbar">
       <div class="row">
-        <input v-model.trim="q" class="input" placeholder="搜索 标签名称" @keyup.enter="fetchList(1)" />
-        <select v-model.number="page_size" class="select" @change="fetchList(1)">
+        <input v-model.trim="q" class="tag-input" placeholder="搜索 标签名称" @keyup.enter="fetchList(1)" />
+        <select v-model.number="page_size" class="tag-select" @change="fetchList(1)">
           <option :value="10">10/页</option>
           <option :value="20">20/页</option>
           <option :value="50">50/页</option>
         </select>
-        <button class="primary" @click="fetchList(1)" :disabled="loading">查询</button>
+        <button class="btn-primary" @click="fetchList(1)" :disabled="loading">查询</button>
         <div class="spacer"></div>
-        <input v-model.trim="new_name" class="input" placeholder="新标签名称" />
-        <button class="primary" @click="createOne" :disabled="loading || !new_name">新增</button>
+        <input v-model.trim="new_name" class="tag-input" placeholder="新标签名称" />
+        <button class="btn-primary" @click="createOne" :disabled="loading || !new_name">新增</button>
       </div>
       <div class="row gap">
         <div class="merge">
           <label>合并</label>
-          <select v-model="mergeSource" class="select">
+          <select v-model="mergeSource" class="tag-select">
             <option disabled value="">源标签</option>
             <option v-for="t in rows" :key="'s'+t.id" :value="t.id">{{ t.name }}</option>
           </select>
           <span>→</span>
-          <select v-model="mergeTarget" class="select">
+          <select v-model="mergeTarget" class="tag-select">
             <option disabled value="">目标标签</option>
             <option v-for="t in rows" :key="'t'+t.id" :value="t.id">{{ t.name }}</option>
           </select>
-          <button class="primary" @click="doMerge" :disabled="loading || !mergeSource || !mergeTarget || mergeSource===mergeTarget">合并</button>
+          <button class="btn-primary" @click="doMerge" :disabled="loading || !mergeSource || !mergeTarget || mergeSource===mergeTarget">合并</button>
         </div>
         <div class="actions">
-          <button class="danger ghost" @click="bulkDelete" :disabled="loading || !selected.length">批量删除</button>
+          <button class="btn-danger ghost" @click="bulkDelete" :disabled="loading || !selected.length">批量删除</button>
         </div>
       </div>
     </div>
@@ -47,12 +47,12 @@
         <tbody>
           <tr v-for="t in rows" :key="t.id">
             <td><input type="checkbox" :value="t.id" :checked="selected.includes(t.id)" @change="toggleOne(t.id, $event)" /></td>
-            <td><input v-model.trim="t._name" class="input" /></td>
+            <td><input v-model.trim="t._name" class="tag-input" /></td>
             <td><span class="badge">{{ t.usage_count || 0 }}</span></td>
             <td>{{ t.created_at }}</td>
             <td class="ops">
-              <button class="primary ghost" @click="save(t)" :disabled="loading || !t._name">保存</button>
-              <button class="danger ghost" @click="remove(t)" :disabled="loading">删除</button>
+              <button class="btn-primary ghost" @click="save(t)" :disabled="loading || !t._name">保存</button>
+              <button class="btn-danger ghost" @click="remove(t)" :disabled="loading">删除</button>
             </td>
           </tr>
         </tbody>
@@ -207,16 +207,15 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 12px; }
-.toolbar { display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
+.page { width: 100%; }
 .row { display:flex; align-items:center; gap:8px; }
 .row.gap { gap:12px; }
 .spacer { flex:1; }
-.input { padding:6px 8px; border:1px solid #dfe3ea; border-radius:6px; min-width:140px; }
-.select { padding:6px 8px; border:1px solid #dfe3ea; border-radius:6px; background:white; }
-.primary { background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
-.primary:disabled, .danger:disabled { opacity:0.6; cursor:not-allowed; }
-.danger { background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
+.tag-input { padding:6px 8px; border:1px solid #dfe3ea; border-radius:6px; min-width:140px; }
+.tag-select { padding:6px 8px; border:1px solid #dfe3ea; border-radius:6px; background:white; }
+.btn-primary { background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
+.btn-primary:disabled, .btn-danger:disabled { opacity:0.6; cursor:not-allowed; }
+.btn-danger { background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; }
 .ghost { background:transparent; border:1px solid #dfe3ea; color:#111; }
 .table-wrap { border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:white; }
 table { width:100%; border-collapse:collapse; }
