@@ -12,12 +12,13 @@ export const adminApi = {
     return http.request('/api/users/me/');
   },
   adminMe() {
-    return http.request('/api/admin/me/');
+    // 添加时间戳防止浏览器缓存
+    return http.request('/api/admin/me/', { query: { _t: Date.now() } });
   },
   // Admin probe: small request to verify IsAdminUser
   async isAdmin() {
     try {
-      const me = await http.request('/api/admin/me/');
+      const me = await http.request('/api/admin/me/', { query: { _t: Date.now() } });
       return !!(me && (me.is_staff || me.is_superuser));
     } catch (e) {
       if (e && e.status === 403) return false;
