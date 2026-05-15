@@ -218,7 +218,7 @@ body { margin: 0; background: #f3f4f6; overflow-y: scroll; }
 .user-item .nickname { color: #6b7280; font-size: 13px; }
 .user-item .badge { background: #dbeafe; color: #1d4ed8; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: auto; }
 
-.container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+.container { max-width: 1200px; margin: 0 auto; }
 
 /* Cards */
 .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; background: #fff; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
